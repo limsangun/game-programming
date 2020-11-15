@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>입력을 받는 공 튀기기</title>
+    <style>
+      
+      canvas {
+        background-color: white;
+        display: block;
+        border-style: solid;
+        border-width: 15px;
+      }
+      form {
+   width:330px;
+   margin:20px;
+   background-color:brown;
+   padding:20px;
+}
+    </style>
+  </head>
+  <body>
+    <canvas id="myCanvas" width="400" height="300">
+        이 브라우저에서는 HTML5의 canvas 요소가 지원되지 않습니다.
+    </canvas>
+    <br/>
+    <form name="f" id="f" onSubmit="return change();">
+        수평 속도 <input name="hv" id="hv" value="4" type="number" min="-10" max="10" /> 
+      <br>
+        수직 속도 <input name="vv" id="vv" value="8" type="number" min="-10" max="10"/>
+      <input type="submit" value="변경"/>
+      </form>
+    <script>
+      var canvas = document.getElementById("myCanvas");
+      var ctx = canvas.getContext("2d");
+      var ballRadius = 10;
+      var x = canvas.width/2;
+      var y = canvas.height-30;
+      var dx = 2;
+      var dy = -2;
+      var paddleHeight = 10;
+      var paddleWidth = 75;
+      var paddleX = (canvas.width-paddleWidth) / 2;
+      var rightPressed = false;
+      var leftPressed = false;
+      var brickRowCount = 3;
+      var brickColumnCount = 5;
+      var brickWidth = 60;
+      var brickHeight = 25;
+      var brickPadding = 10;
+      var brickOffsetTop = 30;
+      var brickOffsetLeft = 30;
+      var score = 0;
+
+    var bricks = [];
+    for(var c=0; c<brickColumnCount; c++) {
+    bricks[c] = [];
+    for(var r=0; r<brickRowCount; r++) {
+        bricks[c][r] = { x: 0, y: 0, status: 1 };
+    }
+}
+
+document.addEventListener("keydown", keyDownHandler, false);
+document.addEventListener("keyup", keyUpHandler, false);
+
+function keyDownHandler(e) {
+    if(e.key == "Right" || e.key == "ArrowRight") {
+        rightPressed = true;
+    }
+    else if(e.key == "Left" || e.key == "ArrowLeft") {
+        leftPressed = true;
+    }
+}
+
+function keyUpHandler(e) {
+    if(e.key == "Right" || e.key == "ArrowRight") {
+        rightPressed = false;
+    }
+    else if(e.key == "Left" || e.key == "ArrowLeft") {
+        leftPressed = false;
+    }
+}
+
+function collisionDetection() {
+    for(var c=0; c<brickColumnCount; c++) {
+        for(var r=0; r<brickRowCount; r++) {
+            var b = bricks[c][r];
+            if(b.status == 1) {
+                if(x > b.x && x < b.x+brickWidth && y > b.y && y < b.y+brickHeight) {
+                    dy = -dy;
+                    b.status = 0;
+                    score++;
+                    if(score == brickRowCount*brickColumnCount) {
+                        alert("YOU WIN, CONGRATULATIONS!");
+                        document.location.reload();
+                        clearInterval(interval); // Needed for Chrome to end game
+                    }
+                }
+            }
+        }
+    }
+}
+
+function drawScore() {
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#0095DD";
+    ctx.fillText("Score: "+score, 8, 20);
+}
+
+function drawPaddle() {
+    ctx.beginPath();
+    ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
+    ctx.fillStyle = "#0095DD";
+    ctx.fill();
+    ctx.closePath();
+}    
+
+function drawBall() {
+    ctx.beginPath();
+    ctx.arc(x, y, 10, 0, Math.PI*2);
+    ctx.fillStyle = "rgb(200,0,50)";
+    ctx.fill();
+    ctx.closePath();
+}
+
+function drawBricks() {
+    for(var c=0; c<brickColumnCount; c++) {
+        for(var r=0; r<brickRowCount; r++) {
+            if(bricks[c][r].status == 1) {
+                var brickX = (c*(brickWidth+brickPadding))+brickOffsetLeft;
+                var brickY = (r*(brickHeight+brickPadding))+brickOffsetTop;
+                bricks[c][r].x = brickX;
+                bricks[c][r].y = brickY;
+                ctx.beginPath();
+                ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                ctx.fillStyle = "#0095DD";
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBricks();
+    drawBall();
+    drawPaddle();
+    drawScore();
+    collisionDetection();
+   
+
+    if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
+        dx = -dx;
+    }
+    if(y + dy < ballRadius) {
+        dy = -dy;
+    }
+    else if(y + dy > canvas.height-ballRadius) {
+        if(x > paddleX && x < paddleX + paddleWidth) {
+            dy = -dy;
+        }
+        else {
+            alert("GAME OVER");
+            document.location.reload();
+            clearInterval(interval); // Needed for Chrome to end game
+        }
+    }
+    if(rightPressed && paddleX < canvas.width-paddleWidth) {
+        paddleX += 7;
+    }
+
+    else if(leftPressed) {
+        paddleX -= 7;
+        if (paddleX < 0){
+            paddleX = 0;
+        }
+    }
+
+    x += dx;
+    y += dy;
+}
+
+var interval = setInterval(draw, 10);
+
+function moveandcheck() {
+  var nballx = ballx + ballvx;
+  var nbally = bally +ballvy;
+ 
+  if (nballx > boxboundx) {
+   ballvx =-ballvx;
+   nballx = boxboundx;
+  }
+  if (nballx < inboxboundx) {
+     nballx = inboxboundx
+   ballvx = -ballvx;
+  }
+  if (nbally > boxboundy) {
+   nbally = boxboundy;
+   ballvy =-ballvy;
+  }
+  if (nbally < inboxboundy) {
+    nbally = inboxboundy;
+   ballvy = -ballvy;
+  }
+  ballx = nballx;
+  bally = nbally;
+}
+function change() {
+  // 이것은 숫자로 변환됩니다. 
+  // 이 함수는 최대값이나 최소값을 고려하지 않습니다.
+  ballvx = Number(f.hv.value);
+  ballvy = Number(f.vv.value);
+  return false;
+}
+    </script>
+  </body>
+</html>
